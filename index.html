@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>照片墙 - 爱心排版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .upload-section {
+                padding: 20px;
+            }
+
+            .drop-zone {
+                padding: 40px 20px;
+            }
+
+            .drop-zone-icon {
+                font-size: 48px;
+            }
+
+            .drop-zone p {
+                font-size: 16px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                width: 100%;
+                padding: 14px 30px;
+            }
+
+            .preview-section {
+                padding: 20px;
+            }
+
+            .photo-item {
+                width: 80px;
+                height: 80px;
+            }
+
+            .heart-wrapper {
+                width: 100%;
+                height: auto;
+                min-height: 400px;
+            }
+
+            .heart-canvas {
+                padding: 20px 10px;
+            }
+
+            .heart-canvas h2 {
+                font-size: 20px;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .drop-zone {
+            border: 3px dashed #ffd93d;
+            border-radius: 15px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fff9e6;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .drop-zone:active {
+            transform: scale(0.98);
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: #ff6b6b;
+            background: #fff0f0;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.2);
+        }
+
+        .drop-zone-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .drop-zone p {
+            color: #555;
+            font-size: 18px;
+        }
+
+        .drop-zone .hint {
+            color: #999;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .drop-zone .mobile-hint {
+            display: none;
+            color: #ff6b6b;
+            font-size: 13px;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .drop-zone .mobile-hint {
+                display: block;
+            }
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 100%);
+            color: white;
+            box-shadow: 0 5px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #555;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            border: 2px solid #fed6e3;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e0e0e0 0%, #c5c5c5 100%);
+            color: #555;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+        }
+
+        .preview-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+
+        .preview-section h2 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .photo-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            min-height: 100px;
+        }
+
+        @media (max-width: 480px) {
+            .photo-item {
+                width: 70px;
+                height: 70px;
+            }
+
+            .drop-zone {
+                padding: 30px 15px;
+            }
+        }
+
+        .photo-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 107, 107, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .photo-item .remove-btn:active {
+            transform: scale(0.9);
+        }
+
+        .photo-item:hover .remove-btn {
+            opacity: 1;
+        }
+
+        .empty-tip {
+            color: #999;
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+        }
+
+        .heart-canvas {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+            display: none;
+        }
+
+        .heart-canvas.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .heart-canvas h2 {
+            color: #ff6b6b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #heartContainer {
+            width: 100%;
+            min-height: 520px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            overflow: visible;
+        }
+
+        @media (max-width: 768px) {
+            #heartContainer {
+                transform: scale(0.7);
+                min-height: 364px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #heartContainer {
+                transform: scale(0.6);
+                min-height: 312px;
+            }
+        }
+
+        .heart-wrapper {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            flex-shrink: 0;
+        }
+
+        .heart-photo {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            animation: popIn 0.5s ease forwards;
+            opacity: 0;
+            border: 2px solid white;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .heart-photo:hover {
+            transform: scale(1.15);
+            z-index: 100;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .heart-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .photo-count {
+            text-align: center;
+            color: #666;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💕 照片墙爱心排版</h1>
+        <p style="text-align: center; color: #888; margin-bottom: 20px; font-size: 14px;">
+            ✨ 使用数学心形公式生成完美爱心 · 支持照片循环复用
+        </p>
+        
+        <div class="upload-section">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-zone-icon">📁</div>
+                <p>拖拽图片到此处上传</p>
+                <p class="hint">或点击选择文件（支持多选）</p>
+                <p class="mobile-hint">📱 手机用户点击此处从相册选择</p>
+            </div>
+            <input type="file" id="fileInput" multiple accept="image/*">
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" id="arrangeBtn">一键排版 ❤️</button>
+                <button class="btn btn-danger" id="clearBtn">清空所有</button>
+            </div>
+            
+            <p class="photo-count" id="photoCount">已上传 0 张照片</p>
+        </div>
+
+        <div class="preview-section">
+            <h2>📸 已上传照片预览</h2>
+            <div class="photo-grid" id="photoGrid">
+                <p class="empty-tip">暂无照片，请先上传图片</p>
+            </div>
+        </div>
+
+        <div class="heart-canvas" id="heartCanvas">
+            <h2>💕 爱心照片墙</h2>
+            <div id="heartContainer">
+                <div class="heart-wrapper" id="heartWrapper"></div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" id="downloadBtn">下载保存 📥</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const photoGrid = document.getElementById('photoGrid');
+        const arrangeBtn = document.getElementById('arrangeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const heartCanvas = document.getElementById('heartCanvas');
+        const heartWrapper = document.getElementById('heartWrapper');
+        const photoCount = document.getElementById('photoCount');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let photos = [];
+
+        // 爱心形状坐标点 - 使用参数方程生成更完美的心形
+        const heartPoints = [];
+        
+        // 使用参数方程生成平滑的爱心轮廓
+        // x = 16sin³(t), y = 13cos(t) - 5cos(2t) - 2cos(3t) - cos(4t)
+        const baseScale = 12;
+        const heartCenterX = 250;
+        const heartCenterY = 240;
+        
+        // 生成外轮廓点 (t 从 0 到 2π)
+        for (let t = 0; t < Math.PI * 2; t += 0.12) {
+            const rawX = baseScale * 16 * Math.pow(Math.sin(t), 3);
+            const rawY = baseScale * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+            heartPoints.push({
+                x: Math.round(heartCenterX + rawX),
+                y: Math.round(heartCenterY - rawY)
+            });
+        }
+        
+        // 添加内部填充点 - 多层同心爱心（相对于中心点缩放）
+        const innerScales = [0.7, 0.5, 0.3];
+        innerScales.forEach(s => {
+            for (let t = 0; t < Math.PI * 2; t += 0.25) {
+                const rawX = baseScale * 16 * Math.pow(Math.sin(t), 3);
+                const rawY = baseScale * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                heartPoints.push({
+                    x: Math.round(heartCenterX + rawX * s),
+                    y: Math.round(heartCenterY - rawY * s)
+                });
+            }
+        });
+        
+        // 添加中心点
+        heartPoints.push({x: heartCenterX, y: heartCenterY});
+        heartPoints.push({x: heartCenterX - 20, y: heartCenterY - 15});
+        heartPoints.push({x: heartCenterX + 20, y: heartCenterY - 15});
+        heartPoints.push({x: heartCenterX - 15, y: heartCenterY + 20});
+        heartPoints.push({x: heartCenterX + 15, y: heartCenterY + 20});
+
+        // 拖拽上传 + 移动端支持
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        // 桌面端拖拽
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // 移动端文件选择
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            // 重置 input 值，允许重复选择同一文件
+            fileInput.value = '';
+        });
+
+        // 防止移动端滚动冲突
+        dropZone.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            dropZone.style.background = '#fff0f0';
+            dropZone.style.borderColor = '#ff6b6b';
+        }, { passive: false });
+
+        dropZone.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            dropZone.style.background = '#fff9e6';
+            dropZone.style.borderColor = '#ffd93d';
+            fileInput.click();
+        }, { passive: false });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        photos.push(e.target.result);
+                        renderPreview();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function renderPreview() {
+            const totalPoints = heartPoints.length;
+            const repeatTimes = photos.length > 0 ? Math.ceil(totalPoints / photos.length) : 0;
+            
+            if (photos.length === 0) {
+                photoCount.textContent = `💕 爱心需要 ${totalPoints} 张照片，当前：0 张`;
+                photoGrid.innerHTML = '<p class="empty-tip">暂无照片，请先上传图片</p>';
+                return;
+            } else if (photos.length < totalPoints) {
+                photoCount.textContent = `💕 爱心需要 ${totalPoints} 张，当前 ${photos.length} 张（将循环使用 ${repeatTimes} 次）`;
+            } else {
+                photoCount.textContent = `✨ 已上传 ${photos.length} 张照片（爱心需要 ${totalPoints} 张，超出 ${photos.length - totalPoints} 张）`;
+            }
+            
+            photoGrid.innerHTML = photos.map((src, index) => `
+                <div class="photo-item">
+                    <img src="${src}" alt="photo-${index}">
+                    <button class="remove-btn" onclick="removePhoto(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removePhoto(index) {
+            photos.splice(index, 1);
+            renderPreview();
+        }
+
+        // 清空所有照片
+        clearBtn.addEventListener('click', () => {
+            photos = [];
+            renderPreview();
+            heartCanvas.classList.remove('active');
+        });
+
+        // 一键排版 - 爱心形状
+        arrangeBtn.addEventListener('click', () => {
+            if (photos.length === 0) {
+                alert('请先上传照片！');
+                return;
+            }
+            
+            // 提示用户爱心需要的照片数量
+            const totalPoints = heartPoints.length;
+            if (photos.length < totalPoints) {
+                const times = Math.ceil(totalPoints / photos.length);
+                console.log(`💡 爱心需要 ${totalPoints} 个位置，当前 ${photos.length} 张照片将循环使用 ${times} 次`);
+            }
+            
+            createHeartLayout();
+        });
+
+        function createHeartLayout() {
+            heartWrapper.innerHTML = '';
+            
+            // 获取实际容器尺寸（支持移动端响应式）
+            const containerWidth = heartWrapper.offsetWidth || 500;
+            const containerHeight = heartWrapper.offsetHeight || 500;
+            
+            // 计算爱心边界
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            heartPoints.forEach(p => {
+                minX = Math.min(minX, p.x);
+                maxX = Math.max(maxX, p.x);
+                minY = Math.min(minY, p.y);
+                maxY = Math.max(maxY, p.y);
+            });
+            
+            const heartW = maxX - minX;
+            const heartH = maxY - minY;
+            const actualCenterX = (minX + maxX) / 2;
+            const actualCenterY = (minY + maxY) / 2;
+            
+            // 缩放：85% 填充
+            const renderScale = Math.min(containerWidth * 0.85 / heartW, containerHeight * 0.85 / heartH);
+            
+            // 容器中心
+            const containerCenterX = containerWidth / 2;
+            const containerCenterY = containerHeight / 2;
+            
+            heartPoints.forEach((point, index) => {
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'heart-photo';
+                const relX = point.x - actualCenterX;
+                const relY = point.y - actualCenterY;
+                const left = containerCenterX + relX * renderScale - 17.5;
+                const top = containerCenterY + relY * renderScale - 17.5;
+                photoDiv.style.left = `${left}px`;
+                photoDiv.style.top = `${top}px`;
+                photoDiv.style.animationDelay = `${index * 0.03}s`;
+                photoDiv.style.zIndex = index;
+                
+                const img = document.createElement('img');
+                img.src = photos[index % photos.length];
+                
+                photoDiv.appendChild(img);
+                heartWrapper.appendChild(photoDiv);
+            });
+
+            heartCanvas.classList.add('active');
+            heartCanvas.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 下载功能 - 快速高清版
+        downloadBtn.addEventListener('click', () => {
+            if (photos.length === 0) {
+                alert('请先上传照片！');
+                return;
+            }
+            
+            // 显示加载提示
+            const originalText = downloadBtn.textContent;
+            downloadBtn.textContent = '⏳ 生成中...';
+            downloadBtn.disabled = true;
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 画布尺寸
+            const canvasSize = 1000;
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            
+            // 透明背景
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 计算爱心边界
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            heartPoints.forEach(p => {
+                minX = Math.min(minX, p.x);
+                maxX = Math.max(maxX, p.x);
+                minY = Math.min(minY, p.y);
+                maxY = Math.max(maxY, p.y);
+            });
+            
+            const heartW = maxX - minX;
+            const heartH = maxY - minY;
+            
+            // 缩放：85% 填充
+            const renderScale = Math.min(canvasSize * 0.85 / heartW, canvasSize * 0.85 / heartH);
+            
+            // 爱心实际中心
+            const actualCenterX = (minX + maxX) / 2;
+            const actualCenterY = (minY + maxY) / 2;
+            
+            // 画布中心
+            const canvasCenterX = canvasSize / 2;
+            const canvasCenterY = canvasSize / 2;
+            
+            // 照片尺寸
+            const photoSize = 35 * renderScale;
+            const photoRadius = photoSize / 2;
+            
+            // 统计完成数量
+            let completedCount = 0;
+            const totalCount = heartPoints.length;
+            
+            // 预加载所有需要用到的唯一照片
+            const uniquePhotos = [...new Set(heartPoints.map((_, i) => photos[i % photos.length]))];
+            const loadedImages = {};
+            
+            // 等待所有唯一照片加载完成
+            const loadPromises = uniquePhotos.map((photoSrc, idx) => {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        loadedImages[photoSrc] = img;
+                        resolve();
+                    };
+                    img.onerror = () => {
+                        console.error('图片加载失败:', idx);
+                        resolve(); // 失败也继续
+                    };
+                    img.src = photoSrc;
+                });
+            });
+            
+            // 所有图片加载完成后开始绘制
+            Promise.all(loadPromises).then(() => {
+                // 绘制所有照片点
+                heartPoints.forEach((point, index) => {
+                    const photoSrc = photos[index % photos.length];
+                    const img = loadedImages[photoSrc];
+                    
+                    if (!img) return;
+                    
+                    try {
+                        const relX = point.x - actualCenterX;
+                        const relY = point.y - actualCenterY;
+                        const x = canvasCenterX + relX * renderScale;
+                        const y = canvasCenterY + relY * renderScale;
+                        
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(x, y, photoRadius, 0, Math.PI * 2);
+                        ctx.closePath();
+                        ctx.clip();
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        
+                        // 从源图片中心裁剪正方形
+                        const minDim = Math.min(img.width, img.height);
+                        const sx = (img.width - minDim) / 2;
+                        const sy = (img.height - minDim) / 2;
+                        
+                        ctx.drawImage(img, sx, sy, minDim, minDim, x - photoRadius, y - photoRadius, photoSize, photoSize);
+                        ctx.restore();
+                        
+                        // 白色边框
+                        ctx.beginPath();
+                        ctx.arc(x, y, photoRadius, 0, Math.PI * 2);
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    } catch (e) {
+                        console.error('绘制失败:', e);
+                    }
+                    
+                    completedCount++;
+                });
+                
+                // 所有绘制完成后下载
+                downloadBtn.textContent = originalText;
+                downloadBtn.disabled = false;
+                
+                // 确保 canvas 完全渲染
+                setTimeout(() => {
+                    try {
+                        const dataURL = canvas.toDataURL('image/png');
+                        console.log('dataURL 长度:', dataURL.length);
+                        
+                        if (dataURL && dataURL.length > 1000) {
+                            const link = document.createElement('a');
+                            link.download = '爱心照片墙.png';
+                            link.href = dataURL;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        } else {
+                            alert('生成失败：图片数据为空，请重试');
+                        }
+                    } catch (e) {
+                        alert('生成失败：' + e.message);
+                    }
+                }, 200);
+            });
+        });
+
+        function downloadCanvas(canvas) {
+            try {
+                // 压缩优化：使用更高的 PNG 质量
+                const link = document.createElement('a');
+                link.download = '爱心照片墙.png';
+                const dataURL = canvas.toDataURL('image/png', 1.0);
+                if (!dataURL || dataURL.length < 100) {
+                    alert('生成失败，请重试');
+                    return;
+                }
+                link.href = dataURL;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                alert('生成失败：' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

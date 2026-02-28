@@ -1,0 +1,17 @@
+{
+  "name": "photo-wall",
+  "version": "1.0.0",
+  "description": "爱心照片墙排版工具",
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "build": "echo 'Static site, no build needed'"
+  },
+  "keywords": [
+    "photo-wall",
+    "heart",
+    "love",
+    "static"
+  ],
+  "author": "",
+  "license": "MIT"
+}
